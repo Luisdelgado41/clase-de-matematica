@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estimación Puntual y por Intervalo</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        input[type="number"] { padding: 6px; border: 1px solid #ddd; }
+        button { padding: 8px 12px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .result { margin-top: 10px; font-weight: bold; }
+        .explanation { margin-bottom: 20px; font-style: italic; }
+        .instructions { margin-bottom: 10px; font-weight: bold; }
+        .example { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; background-color: #f9f9f9; }
+        .clear-button {margin-bottom: 10px; display: inline-block;}
+    </style>
+</head>
+<body>
+    <h2>Estimación Puntual y por Intervalo</h2>
+
+    <div class="explanation">
+        <p>Esta herramienta calcula una estimación puntual (promedio) y un intervalo de confianza para un conjunto de datos que ingreses. El intervalo de confianza indica un rango en el cual, con una cierta probabilidad (nivel de confianza), se espera encontrar el verdadero valor de la media poblacional.</p>
+    </div>
+    <div class="instructions">
+        <p>Sigue estos pasos:</p>
+        <ol>
+            <li>Ingresa los datos numéricos uno a la vez en el campo "Nuevo Dato" y presiona "Agregar Dato". Los datos se agregarán a la tabla.</li>
+            <li>Ingresa el nivel de confianza deseado (por ejemplo, 95 para 95%) en el campo correspondiente.</li>
+            <li>Presiona "Calcular" para ver los resultados.</li>
+        </ol>
+    </div>
+
+    <div class="example">
+        <h3>Ejemplo: Análisis del Tiempo de Respuesta de un Servidor Web</h3>
+        <p><strong>Datos de Ejemplo (en milisegundos):</strong> 152, 148, 160, 155, 149, 158, 151, 162, 153, 157</p>
+        <p><strong>Nivel de Confianza:</strong> 95% (por defecto)</p>
+        <button onclick="loadExample()">Cargar Ejemplo y Calcular</button>
+
+        <p><strong>Resultado del Ejemplo:</strong></p>
+        <p><strong>Estimación Puntual (Promedio):</strong> <span id="exampleMeanResult"></span></p>
+        <p><strong>Estimación por Intervalo:</strong> (<span id="exampleLowerBound"></span>, <span id="exampleUpperBound"></span>)</p>
+    </div>
+
+    <button class="clear-button" onclick="clearData()">Limpiar Tabla</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Dato</th>
+                <th>Valor</th>
+            </tr>
+        </thead>
+        <tbody id="dataBody">
+        </tbody>
+    </table>
+
+    <label for="newInput">Nuevo Dato:</label>
+    <input type="number" id="newInput">
+    <button onclick="addData()">Agregar Dato</button><br><br>
+
+    <label for="confidence">Nivel de Confianza (%):</label>
+    <input type="number" id="confidence" value="95">
+    <button onclick="calculate()">Calcular</button><br><br>
+
+    <div class="result">
+        <p><strong>Estimación Puntual (Promedio):</strong> <span id="meanResult"></span></p>
+        <p><strong>Estimación por Intervalo:</strong> (<span id="lowerBound"></span>, <span id="upperBound"></span>)</p>
+    </div>
+
+    <script>
+       // Variables globales
+    let data = [];
+    const exampleData = [152, 148, 160, 155, 149, 158, 151, 162, 153, 157];
+
+    // Función para agregar datos a la tabla
+    function addData() {
+        let newInput = document.getElementById('newInput').value;
+        if (newInput) {
+            // Convertir a número y añadir al array
+            data.push(Number(newInput));
+            // Limpiar el campo de entrada
+            document.getElementById('newInput').value = '';
+            // Actualizar la tabla
+            updateTable();
+        }
+    }
+
+    // Función para actualizar la tabla de datos
+    function updateTable() {
+        let dataBody = document.getElementById('dataBody');
+        // Limpiar la tabla
+        dataBody.innerHTML = '';
+
+        // Iterar por cada valor en el array
+        for (let i = 0; i < data.length; i++) {
+            let value = data[i];
+            // Crear fila
+            let row = document.createElement('tr');
+            // Crear celda para el índice
+            let dataCell = document.createElement('td');
+            dataCell.textContent = "Dato " + (i + 1);
+            // Crear celda para el valor
+            let valueCell = document.createElement('td');
+            valueCell.textContent = value;
+            // Añadir celdas a la fila
+            row.appendChild(dataCell);
+            row.appendChild(valueCell);
+            // Añadir fila a la tabla
+            dataBody.appendChild(row);
+        }
+    }
+
+    // Función para cargar el ejemplo y calcular los resultados
+    function loadExample() {
+         // Copiar los datos del ejemplo
+        data = [...exampleData];
+        // Actualizar la tabla
+        updateTable();
+        // Calcular los resultados
+        calculate();
+        // Calcular los resultados del ejemplo
+        calculateExample();
+    }
+
+    // Función para Limpiar la tabla
+    function clearData() {
+        // Limpiar el array de datos
+        data = [];
+         // Limpiar los resultados
+         document.getElementById('meanResult').textContent = '';
+         document.getElementById('lowerBound').textContent = '';
+         document.getElementById('upperBound').textContent = '';
+        // Actualizar la tabla
+        updateTable();
+    }
+
+    // Función para calcular el promedio
+    function calculateMean(data) {
+        if (data.length === 0) return 0;
+        let sum = 0;
+        // Sumar todos los valores
+        for (let i = 0; i < data.length; i++) {
+            sum += data[i];
+        }
+         // Calcular la media
+        return sum / data.length;
+    }
+     // Función para calcular la desviación estándar muestral
+    function calculateStandardDeviation(data, mean) {
+      if (data.length <= 1) return 0;
+         let squaredDifferences = [];
+         for (let i = 0; i < data.length; i++) {
+            squaredDifferences.push((data[i] - mean) ** 2);
+         }
+      let sumSquaredDifferences = 0;
+      for (let i = 0; i < squaredDifferences.length; i++) {
+        sumSquaredDifferences += squaredDifferences[i];
+      }
+         return Math.sqrt(sumSquaredDifferences / (data.length - 1));
+    }
+
+    // Función para calcular el intervalo de confianza
+    function calculateConfidenceInterval(data, mean, confidenceLevel) {
+         if (data.length <= 1) return [NaN, NaN];
+        let sd = calculateStandardDeviation(data,mean);
+        let alpha = 1 - (confidenceLevel / 100);
+        let tValue = jStat.studentt.inv(1 - alpha / 2, data.length - 1);
+         let marginOfError = tValue * (sd / Math.sqrt(data.length));
+         let lowerBound = mean - marginOfError;
+         let upperBound = mean + marginOfError;
+        return [lowerBound, upperBound];
+    }
+    // Función para manejar el cálculo
+    function calculate() {
+        let confidenceLevel = document.getElementById('confidence').value;
+         let mean = calculateMean(data);
+         let [lowerBound, upperBound] = calculateConfidenceInterval(data, mean, confidenceLevel);
+          document.getElementById('meanResult').textContent = mean.toFixed(2);
+        document.getElementById('lowerBound').textContent = lowerBound.toFixed(2);
+       document.getElementById('upperBound').textContent = upperBound.toFixed(2);
+    }
+
+    // Función para calcular el ejemplo
+    function calculateExample() {
+       let mean = calculateMean(exampleData);
+         let [lowerBound, upperBound] = calculateConfidenceInterval(exampleData, mean, 95);
+         document.getElementById('exampleMeanResult').textContent = mean.toFixed(2);
+         document.getElementById('exampleLowerBound').textContent = lowerBound.toFixed(2);
+          document.getElementById('exampleUpperBound').textContent = upperBound.toFixed(2);
+    }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstat/1.9.5/jstat.min.js"></script>
+</body>
+</html>
